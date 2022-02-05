@@ -132,4 +132,6 @@ dmypy.json
 .idea/
 .vscode/
 
-workdir/
+config.yml
+cache.db
+cache.db-journal
