@@ -14,7 +14,7 @@ DEFAULT_CONFIG = '/app/config.yml'
 DEFAULT_LOG_LEVEL = 'INFO'
 DEFAULT_LOG_FORMAT = '%(asctime)s | %(levelname)s | %(module)s: %(message)s'
 
-INFO_TEXT = 'This service can be used only for integration with DSW.' \
+INFO_TEXT = 'This service can be used only for integration with DSW. ' \
             'Any other use is strictly prohibited. All the data reachable ' \
             'through the proxy fall under the FAIRsharing license available ' \
             'at https://fairsharing.org/licence.'

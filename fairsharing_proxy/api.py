@@ -21,9 +21,14 @@ async def get_legacy_search(request: fastapi.Request):
     return await CORE.legacy_search(request=request)
 
 
+@app.get(path='/search')
+async def get_search(request: fastapi.Request):
+    return await CORE.search(request=request, is_get=True)
+
+
 @app.post(path='/search')
 async def post_search(request: fastapi.Request):
-    return await CORE.search(request=request)
+    return await CORE.search(request=request, is_get=False)
 
 
 @app.on_event("startup")

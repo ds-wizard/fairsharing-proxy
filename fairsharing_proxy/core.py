@@ -15,6 +15,14 @@ from fairsharing_proxy.model import Token, ProxyRequest, \
     LegacySearchQuery, SearchQuery, RecordSet
 
 
+class SearchRetryError(Exception):
+    pass
+
+
+def _as_message(msg: str) -> dict:
+    return {'message': msg}
+
+
 def _load_config() -> ProxyConfig:
     config_file = os.getenv(ENV_CONFIG, DEFAULT_CONFIG)
     try:
@@ -80,7 +88,7 @@ class _ProxyCore:
             LOG.warning(f'[RQ:{rq.trace_id}] Invalid authorization: {str(e)}')
             raise fastapi.HTTPException(
                 status_code=400,
-                detail='Invalid authorization provided.',
+                detail=_as_message('Invalid authorization provided.'),
             )
 
     async def _get_token(self, rq: ProxyRequest, auth_str: str) -> Token:
@@ -92,7 +100,9 @@ class _ProxyCore:
             if not token.ok:
                 raise fastapi.HTTPException(
                     status_code=401,
-                    detail=f'Could not authenticate via remote API: {token.message}'
+                    detail=_as_message(
+                        'Could not authenticate via remote API: {token.message}'
+                    ),
                 )
             self.token_store.store_token(username, token)
             return token
@@ -100,88 +110,96 @@ class _ProxyCore:
             LOG.warning(f'[RQ:{rq.trace_id}] Failed to login: {str(e)}')
             raise fastapi.HTTPException(
                 status_code=500,
-                detail='Failed to login via remote API.'
+                detail=_as_message('Failed to login via remote API.'),
             )
 
-    async def legacy_search(
-            self, request: fastapi.Request, *, retry=True,
-    ) -> fastapi.Response:
-        # TODO: use fastapi.HTTPException
+    async def _execute_search(
+            self, query: SearchQuery, token: Token, retry=False,
+    ) -> RecordSet:
         # TODO: cache
+        try:
+            results = await self.client.search(
+                query=query,
+                token=token,
+            )
+        except FAIRSharingUnauthorizedError as e:
+            self.token_store.clear_token(token.username)
+            if retry:
+                raise SearchRetryError()
+            else:
+                raise fastapi.HTTPException(
+                    status_code=401,
+                    detail=e.CONTENT,
+                )
+        except httpx.HTTPStatusError as e:
+            raise fastapi.HTTPException(
+                status_code=e.response.status_code,
+                detail=e.response.text,
+            )
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            raise fastapi.HTTPException(
+                status_code=500,
+                detail=_as_message(
+                    f'Failed to execute FAIRSharing request: {str(e)}'
+                ),
+            )
+        result_set = RecordSet(results)
+        result_set.rectify()
+        return result_set
+
+    async def legacy_search(
+            self, request: fastapi.Request,
+    ) -> fastapi.Response:
         rq = ProxyRequest(request=request)
         head_auth = rq.headers.get('Api-Key', '')
         token = await self._get_token(rq, head_auth)
         query = LegacySearchQuery.from_params(params=request.query_params)
         try:
-            results = await self.client.search(
-                token=token,
+            result_set = await self._execute_search(
                 query=query.to_query(),
+                token=token,
+                retry=True,
             )
-        except FAIRSharingUnauthorizedError as e:
-            self.token_store.clear_token(token.username)
-            if retry:
-                return await self.legacy_search(request, retry=False)
-            else:
-                return fastapi.responses.JSONResponse(
-                    status_code=401,
-                    content=e.CONTENT,
-                )
-        except httpx.HTTPStatusError as e:
-            return fastapi.responses.JSONResponse(
-                status_code=e.response.status_code,
-                content=e.response.json(),
+        except SearchRetryError:
+            self.token_store.clear_token(head_auth)
+            token = await self._get_token(rq, head_auth)
+            result_set = await self._execute_search(
+                query=query.to_query(),
+                token=token,
+                retry=False,
             )
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return fastapi.responses.JSONResponse(
-                status_code=500,
-                content={
-                    'message': f'Failed to execute FAIRSharing request: {str(e)}',
-                },
-            )
-        result_set = RecordSet(results)
         return fastapi.responses.JSONResponse(
             status_code=200,
             content=result_set.to_legacy_json(),
         )
 
     async def search(
-            self, request: fastapi.Request, *, retry=True,
+            self, request: fastapi.Request, is_get: bool,
     ) -> fastapi.Response:
-        # TODO: use fastapi.HTTPException
         # TODO: cache
         rq = ProxyRequest(request=request)
         head_auth = rq.headers.get('Authorization', '')
         token = await self._get_token(rq, head_auth)
-        query = SearchQuery.from_params(params=request.query_params)
+        if is_get:
+            query = SearchQuery.from_params(params=request.query_params)
+        else:
+            query = SearchQuery.from_json(data=request.json())
         try:
-            results = await self.client.search(
-                token=token,
+            result_set = await self._execute_search(
                 query=query,
+                token=token,
+                retry=True,
             )
-        except FAIRSharingUnauthorizedError as e:
-            self.token_store.clear_token(token.username)
-            if retry:
-                return await self.search(request, retry=False)
-            else:
-                return fastapi.responses.JSONResponse(
-                    status_code=401,
-                    content=e.CONTENT,
-                )
-        except httpx.HTTPStatusError as e:
-            return fastapi.responses.JSONResponse(
-                status_code=e.response.status_code,
-                content=e.response.json(),
+        except SearchRetryError:
+            self.token_store.clear_token(head_auth)
+            token = await self._get_token(rq, head_auth)
+            result_set = await self._execute_search(
+                query=query.to_query(),
+                token=token,
+                retry=False,
             )
-        except Exception as e:
-            return fastapi.responses.JSONResponse(
-                status_code=500,
-                content={
-                    'message': f'Failed to execute FAIRSharing request: {str(e)}',
-                },
-            )
-        result_set = RecordSet(results)
         return fastapi.responses.JSONResponse(
             status_code=200,
             content=result_set.to_json(),

@@ -3,7 +3,7 @@ import fastapi
 import json
 import uuid
 
-from typing import Optional, Mapping
+from typing import Any, Optional, Mapping
 
 from fairsharing_proxy.consts import URL_PREFIX, URL_PREFIX_LEN
 
@@ -89,6 +89,12 @@ class SearchQuery:
             is_approved=params.get('is_approved', None),
             is_maintained=params.get('is_maintained', None),
         )
+
+    @staticmethod
+    def from_json(data: Any):
+        if isinstance(data, dict):
+            return SearchQuery.from_params(data)
+        return SearchQuery.from_params({})
 
     @property
     def params(self) -> dict[str, str]:
@@ -270,6 +276,10 @@ class RecordSet:
 
     def __init__(self, records: list[Record]):
         self.records = records
+
+    def rectify(self):
+        for record in self.records:
+            record.rectify()
 
     def to_json(self) -> dict:
         return {

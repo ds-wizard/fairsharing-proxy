@@ -21,6 +21,10 @@ class FAIRSharingUnauthorizedError(Exception):
         'message': _NEED_LOGIN_MESSAGE
     }
 
+    MESSAGE = {
+        _NEED_LOGIN_MESSAGE
+    }
+
 
 class FAIRSharingClient:
 
