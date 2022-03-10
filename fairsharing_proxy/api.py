@@ -16,6 +16,7 @@ async def get_info():
     )
 
 
+@app.get(path='/legacy/search/', include_in_schema=False)
 @app.get(path='/legacy/search')
 async def get_legacy_search(request: fastapi.Request):
     return await CORE.legacy_search(request=request)

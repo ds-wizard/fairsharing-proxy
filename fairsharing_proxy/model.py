@@ -8,6 +8,12 @@ from typing import Any, Optional, Mapping
 from fairsharing_proxy.consts import URL_PREFIX, URL_PREFIX_LEN
 
 
+def _to_lower(text: Optional[str]) -> Optional[str]:
+    if isinstance(text, str):
+        return text.lower()
+    return None
+
+
 class ProxyRequest:
 
     def __init__(self, request: fastapi.Request):
@@ -99,14 +105,14 @@ class SearchQuery:
     @property
     def params(self) -> dict[str, str]:
         params = {
-            'fairsharing_registry': self.registry,
-            'status': self.status,
-            'record_type': self.record_type,
-            'domains': self.domains,
-            'subjects': self.subjects,
-            'countries': self.countries,
-            'taxonomies': self.taxonomies,
-            'user_defined_tags': self.user_defined_tags,
+            'fairsharing_registry': _to_lower(self.registry),
+            'status': _to_lower(self.status),
+            'record_type': _to_lower(self.record_type),
+            'domains': _to_lower(self.domains),
+            'subjects': _to_lower(self.subjects),
+            'countries': _to_lower(self.countries),
+            'taxonomies': _to_lower(self.taxonomies),
+            'user_defined_tags': _to_lower(self.user_defined_tags),
             'is_recommended': self.is_recommended,
             'is_approved': self.is_approved,
             'is_maintained': self.is_maintained,
