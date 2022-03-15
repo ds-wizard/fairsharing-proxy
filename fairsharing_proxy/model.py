@@ -131,6 +131,12 @@ class SearchQuery:
 
 class LegacySearchQuery:
 
+    _REGISTRY_MAPPING = {
+        'standards': 'standard',
+        'databases': 'database',
+        'policies': 'policy',
+    }
+
     def __init__(self, query: str, **kwargs):
         self.query = query  # type: str
         self.registry = kwargs.get('registry', None)  # type: Optional[str]
@@ -151,10 +157,19 @@ class LegacySearchQuery:
             tags=params.get('tags', None),
         )
 
+    @classmethod
+    def _rectify_registry(cls, registry: Optional[str]) -> Optional[str]:
+        if registry is None:
+            return None
+        registry = registry.lower()
+        if registry in cls._REGISTRY_MAPPING.keys():
+            return cls._REGISTRY_MAPPING[registry]
+        return registry
+
     def to_query(self) -> SearchQuery:
         return SearchQuery(
             query=self.query,
-            registry=self.registry,
+            registry=self._rectify_registry(self.registry),
             domains=self.domains,
             taxonomies=self.taxonomies,
             subjects=self.disciplines,
