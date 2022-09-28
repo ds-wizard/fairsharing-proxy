@@ -240,7 +240,24 @@ class Record:
         }
 
     def to_json(self) -> dict:
-        return {}
+        return {
+            'id': self.fairsharing_id,
+            'registry': self.registry,
+            'record_type': self.record_type,
+            'name': self.name,
+            'abbreviation': self.abbreviation,
+            'description': self.description,
+            'doi': self.doi,
+            'url': self.url,
+            'countries': self.countries,
+            'disciplines': self.subjects,
+            'domains': self.domains,
+            'taxonomies': self.taxonomies,
+            'user_defined_tags': self.user_defined_tags,
+            'legacy_ids': self.legacy_ids,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+        }
 
     def to_row(self):
         return (
