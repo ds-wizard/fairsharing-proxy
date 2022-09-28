@@ -204,8 +204,8 @@ class Record:
     def optimize_text(text: str):
         parts = text.split(':', maxsplit=1)
         if len(parts) == 2 and 'FAIRsharing' in parts[0]:
-            return parts[1]
-        return text
+            return parts[1].strip()
+        return text.strip()
 
     def rectify(self):
         self.name = self.optimize_text(self.name)
