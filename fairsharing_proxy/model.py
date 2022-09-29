@@ -183,22 +183,27 @@ class Record:
     def __init__(self, **data: dict):
         self.fairsharing_id = str(data.get('id', ''))  # type: str
         attrs = data.get('attributes', {})  # type: dict
-        self.registry = attrs.get('fairsharing-registry', '').lower()  # type: str
-        self.record_type = attrs.get('record-type', '').lower()  # type: str
-        self.name = attrs.get('name', '')  # type: str
-        self.description = attrs.get('description', '')  # type: str
+        metadata = attrs.get('metadata', {})  # type: dict
+        self.registry = attrs.get('fairsharing_registry', '').lower()  # type: str
+        self.record_type = attrs.get('record_type', '').lower()  # type: str
         self.abbreviation = attrs.get('abbreviation', '')  # type: str
         self.doi = attrs.get('doi', None)  # type: Optional[str]
+        self.homepage = metadata.get('homepage', None)  # type: Optional[str]
+        self.status = metadata.get('status', None)  # type: Optional[str]
+        self.name = metadata.get('name',
+                                 attrs.get('name', ''))  # type: str
+        self.description = metadata.get('description',
+                                        attrs.get('description', ''))  # type: str
         self.url = attrs.get('url', '')  # type: str
         self.subjects = attrs.get('subjects', [])  # type: list[str]
         self.domains = attrs.get('domains', [])  # type: list[str]
         self.taxonomies = attrs.get('taxonomies', [])  # type: list[str]
-        self.user_defined_tags = attrs.get('user-defined-tags', [])  # type: list[str]
+        self.user_defined_tags = attrs.get('user_defined_tags', [])  # type: list[str]
         self.countries = attrs.get('countries', [])  # type: list[str]
-        self.fairsharing_licence = attrs.get('fairsharing-licence', '')  # type: str
-        self.legacy_ids = attrs.get('legacy-ids', [])  # type: list[str]
-        self.created_at = attrs.get('created-at', '')  # type: str
-        self.updated_at = attrs.get('updated-at', '')  # type: str
+        self.fairsharing_licence = attrs.get('fairsharing_licence', '')  # type: str
+        self.legacy_ids = attrs.get('legacy_ids', [])  # type: list[str]
+        self.created_at = attrs.get('created_at', '')  # type: str
+        self.updated_at = attrs.get('updated_at', '')  # type: str
 
     @staticmethod
     def optimize_text(text: str):
@@ -249,6 +254,7 @@ class Record:
             'description': self.description,
             'doi': self.doi,
             'url': self.url,
+            'homepage': self.homepage,
             'countries': self.countries,
             'disciplines': self.subjects,
             'domains': self.domains,
