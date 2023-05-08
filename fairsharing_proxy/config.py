@@ -13,8 +13,9 @@ class MissingConfigurationError(Exception):
 
 class FAIRSharingConfig:
 
-    def __init__(self, api: str):
+    def __init__(self, api: str, timeout: float):
         self.api = api
+        self.timeout = timeout
 
 
 class CacheConfig:
@@ -50,6 +51,9 @@ class ProxyConfig:
 class ProxyConfigParser:
 
     DEFAULTS = {
+        'fairsharing': {
+            'timeout': 25,
+        },
         'logging': {
             'level': DEFAULT_LOG_LEVEL,
             'format': DEFAULT_LOG_FORMAT,
@@ -106,6 +110,7 @@ class ProxyConfigParser:
     def _fairsharing(self):
         return FAIRSharingConfig(
             api=self.get_or_default('fairsharing', 'api'),
+            timeout=float(self.get_or_default('fairsharing', 'timeout')),
         )
 
     @property

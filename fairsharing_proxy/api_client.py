@@ -33,6 +33,7 @@ class FAIRSharingClient:
         self.url_sign_in = f'{self.api}/users/sign_in'
         self.url_list = f'{self.api}/fairsharing_records'
         self.url_search = f'{self.api}/search/fairsharing_records'
+        self.timeout = cfg.fairsharing.timeout
 
     @staticmethod
     def _check_response(response: httpx.Response):
@@ -55,7 +56,8 @@ class FAIRSharingClient:
                     'login': username,
                     'password': password,
                 }
-            }
+            },
+            timeout=self.timeout,
         )
         response.raise_for_status()
         result = response.json()
@@ -78,6 +80,7 @@ class FAIRSharingClient:
             url=self.url_search,
             params=query.params,
             headers=_headers_with(token),
+            timeout=self.timeout,
         )
         self._check_response(response)
         result = response.json().get('data', [])
@@ -137,7 +140,7 @@ class FAIRSharingClient:
 
     async def client_list_records_all(
             self, client: httpx.AsyncClient, token: Token,
-            page_size=500, timeout=25, page_delay=None,
+            page_size=500, timeout=None, page_delay=None,
     ) -> list[Record]:
         next_url = f'{self.url_list}?page[number]=1&page[size]={page_size}'
         records = list()  # type: list[Record]
@@ -145,7 +148,7 @@ class FAIRSharingClient:
             response = await client.get(
                 url=next_url,
                 headers=_headers_with(token),
-                timeout=timeout,
+                timeout=timeout or self.timeout,
             )
             self._check_response(response)
             result = response.json().get('data', [])
