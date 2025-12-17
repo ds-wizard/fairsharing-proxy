@@ -1,8 +1,11 @@
 import asyncio
 import httpx
 
+from gql import gql, Client
+from gql.transport.httpx import HTTPXAsyncTransport
+
 from .config import ProxyConfig
-from .model import Token, Record, SearchQuery
+from .model import Token, Record, SearchQuery, GraphQLFastSearchQuery
 
 _NEED_LOGIN_MESSAGE = 'please login before continuing'
 
@@ -158,3 +161,89 @@ class FAIRSharingClient:
             if page_delay is not None:
                 await asyncio.sleep(page_delay)
         return records
+
+
+def gql_list(values):
+    return "[" + ", ".join(f'"{v}"' for v in values) + "]"
+
+
+def build_where_literal(
+    registries: list[str] | None = None,
+    types: list[str] | None = None,
+    statuses: list[str] | None = None,
+):
+    filters = []
+    if registries:
+        filters.append(f"registry: {gql_list(registries)}")
+    if types:
+        filters.append(f"type: {gql_list(types)}")
+    if statuses:
+        filters.append(f"status: {gql_list(statuses)}")
+    if not filters:
+        return """
+        {
+          operator: "_and"
+          fields: []
+        }
+        """
+    inner = "\n".join(filters)
+    return f"""
+    {{
+      operator: "_and"
+      fields: [
+        {{
+          operator: "_and"
+          {inner}
+        }}
+      ]
+    }}
+    """
+
+
+class FAIRSharingGraphQLClient:
+
+    def __init__(self, cfg: ProxyConfig):
+        self.transport = HTTPXAsyncTransport(
+            url=cfg.fairsharing.graphql_api,
+            headers={
+                'User-Agent': 'fairsharing-proxy/0.1',
+                'X-GraphQL-Key': cfg.fairsharing.graphql_key,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+        )
+
+    async def _execute(self, query, variables=None):
+        async with Client(transport=self.transport,
+                          fetch_schema_from_transport=False) as client:
+            result = await client.execute(query, variables)
+            return result
+
+    async def search(self, query: GraphQLFastSearchQuery):
+        where_literal = build_where_literal(
+            registries=query.registry,
+            types=query.record_type,
+            statuses=query.status,
+        )
+        gquery = gql(f"""
+        query {{
+          advancedSearchFast(
+            q: "{query.q}"
+            where: {where_literal}
+          ) {{
+            id
+            type
+            name
+            homepage
+            abbreviation
+            doi
+            description
+            registry
+            status
+          }}
+        }}
+        """)
+        result = await self._execute(
+            query=gquery,
+        )
+        return result['advancedSearchFast']

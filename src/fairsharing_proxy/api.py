@@ -1,7 +1,10 @@
 import fastapi
 
+from typing import Annotated
+
 from .consts import BUILD_INFO, NICE_NAME, VERSION
 from .core import CORE
+from .model import GraphQLFastSearchQuery
 
 app = fastapi.FastAPI(
     title=NICE_NAME,
@@ -30,6 +33,25 @@ async def get_search(request: fastapi.Request):
 @app.post(path='/search')
 async def post_search(request: fastapi.Request):
     return await CORE.search(request=request, is_get=False)
+
+
+@app.get(path='/v2/search')
+async def get_v2_search(
+        q: Annotated[str | None, fastapi.Query()] = None,
+        registry: Annotated[list[str] | None, fastapi.Query()] = None,
+        record_type: Annotated[list[str] | None, fastapi.Query()] = None,
+        status: Annotated[list[str] | None, fastapi.Query()] = None,
+        min_q: Annotated[int, fastapi.Query()] = 1,
+):
+    if q is None or len(q) < min_q:
+        return []
+    query = GraphQLFastSearchQuery(
+        q=q,
+        registry=registry,
+        record_type=record_type,
+        status=status,
+    )
+    return await CORE.v2_search(query)
 
 
 @app.on_event("startup")
