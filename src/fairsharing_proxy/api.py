@@ -38,18 +38,18 @@ async def post_search(request: fastapi.Request):
 @app.get(path='/v2/search')
 async def get_v2_search(
         q: Annotated[str | None, fastapi.Query()] = None,
-        registry: Annotated[list[str] | None, fastapi.Query()] = None,
-        record_type: Annotated[list[str] | None, fastapi.Query()] = None,
-        status: Annotated[list[str] | None, fastapi.Query()] = None,
+        registry: Annotated[str | None, fastapi.Query()] = None,
+        record_type: Annotated[str | None, fastapi.Query()] = None,
+        status: Annotated[str | None, fastapi.Query()] = None,
         min_q: Annotated[int, fastapi.Query()] = 1,
 ):
     if q is None or len(q) < min_q:
         return []
     query = GraphQLFastSearchQuery(
         q=q,
-        registry=registry,
-        record_type=record_type,
-        status=status,
+        registry=_process_query_param_list(registry),
+        record_type=_process_query_param_list(record_type),
+        status=_process_query_param_list(status),
     )
     return await CORE.v2_search(query)
 
@@ -62,3 +62,10 @@ async def app_init():
 @app.on_event("shutdown")
 async def shutdown_event():
     await CORE.shutdown()
+
+
+def _process_query_param_list(param: str | None) -> list[str] | None:
+    if param is None:
+        return None
+    result = list(filter(lambda x: len(x) > 0, map(str.strip, param.split(','))))
+    return result if len(result) > 0 else None
