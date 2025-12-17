@@ -1,5 +1,8 @@
-FROM python:3.9-slim
+FROM python:3.14-alpine
+
 WORKDIR /app
+
+ENV PATH="/app/bin:${PATH}"
 
 COPY ./requirements.txt /app/requirements.txt
 

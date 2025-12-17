@@ -2,7 +2,7 @@ import yaml
 
 from typing import List
 
-from fairsharing_proxy.consts import DEFAULT_LOG_LEVEL, DEFAULT_LOG_FORMAT
+from .consts import DEFAULT_LOG_LEVEL, DEFAULT_LOG_FORMAT
 
 
 class MissingConfigurationError(Exception):

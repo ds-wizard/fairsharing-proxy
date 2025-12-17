@@ -2,10 +2,10 @@ import datetime
 import httpx
 import sqlite3
 
-from fairsharing_proxy.api_client import FAIRSharingClient
-from fairsharing_proxy.config import ProxyConfig
-from fairsharing_proxy.logger import LOG
-from fairsharing_proxy.model import Record
+from .api_client import FAIRSharingClient
+from .config import ProxyConfig
+from .logger import LOG
+from .model import Record
 
 
 _QUERY_CREATE_TABLE_RECORDS = '''
@@ -123,4 +123,4 @@ class RecordsCache:
 
         def query_records(query: str) -> list[Record]:
             # TODO fts?
-            ...
+            return []

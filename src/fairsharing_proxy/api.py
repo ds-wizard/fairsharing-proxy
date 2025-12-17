@@ -1,7 +1,7 @@
 import fastapi
 
-from fairsharing_proxy.consts import BUILD_INFO, NICE_NAME, VERSION
-from fairsharing_proxy.core import CORE
+from .consts import BUILD_INFO, NICE_NAME, VERSION
+from .core import CORE
 
 app = fastapi.FastAPI(
     title=NICE_NAME,

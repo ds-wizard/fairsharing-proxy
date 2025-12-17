@@ -1,8 +1,8 @@
 import asyncio
 import httpx
 
-from fairsharing_proxy.config import ProxyConfig
-from fairsharing_proxy.model import Token, Record, SearchQuery
+from .config import ProxyConfig
+from .model import Token, Record, SearchQuery
 
 _NEED_LOGIN_MESSAGE = 'please login before continuing'
 

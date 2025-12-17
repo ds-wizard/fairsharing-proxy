@@ -2,7 +2,7 @@
 set -e
 
 # File with build info
-BUILD_INFO_FILE=fairsharing_proxy/consts.py
+BUILD_INFO_FILE=src/fairsharing_proxy/consts.py
 
 # Create version based on git tag or branch
 branch=$(git rev-parse --abbrev-ref HEAD)

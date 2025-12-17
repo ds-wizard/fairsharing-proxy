@@ -1,9 +1,9 @@
 import asyncio
 import click
 
-from fairsharing_proxy.cache import RecordsCache
-from fairsharing_proxy.config import cfg_parser, ProxyConfig
-from fairsharing_proxy.consts import ENV_CONFIG, DEFAULT_ENCODING, DEFAULT_CONFIG
+from .cache import RecordsCache
+from .config import cfg_parser, ProxyConfig
+from .consts import ENV_CONFIG, DEFAULT_ENCODING, DEFAULT_CONFIG
 
 
 @click.group()
@@ -19,7 +19,7 @@ def cli(ctx, config_file):
 @cli.command()
 @click.pass_context
 def cache_test(ctx):
-    cfg = ctx.obj['cfg']  # type: ProxyConfig
+    cfg: ProxyConfig = ctx.obj['cfg']
     if not cfg.cache.enabled:
         click.echo('Caching is not enabled')
         exit(1)

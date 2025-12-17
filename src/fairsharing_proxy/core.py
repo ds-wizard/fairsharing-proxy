@@ -5,13 +5,13 @@ import pathlib
 
 import fastapi
 
-from fairsharing_proxy.cache import RecordsCache
-from fairsharing_proxy.config import ProxyConfig, cfg_parser
-from fairsharing_proxy.consts import DEFAULT_CONFIG, ENV_CONFIG
-from fairsharing_proxy.api_client import FAIRSharingClient, \
+from .cache import RecordsCache
+from .config import ProxyConfig, cfg_parser
+from .consts import DEFAULT_CONFIG, ENV_CONFIG
+from .api_client import FAIRSharingClient, \
     FAIRSharingUnauthorizedError
-from fairsharing_proxy.logger import LOG, init_config_logging
-from fairsharing_proxy.model import Token, ProxyRequest, \
+from .logger import LOG, init_config_logging
+from .model import Token, ProxyRequest, \
     LegacySearchQuery, SearchQuery, RecordSet
 
 

@@ -1,0 +1,45 @@
+[build-system]
+requires = ['setuptools']
+build-backend = 'setuptools.build_meta'
+
+[project]
+name = 'dsw-fairsharing-proxy'
+version = '0.1.0'
+description = 'Proxy service for using FAIRsharing API in DSW'
+readme = 'README.md'
+keywords = ['wizard', 'proxy', 'fairsharing', 'api']
+license = { text = 'Apache-2.0' }
+authors = [
+    { name = 'Marek Suchánek', email = 'marek.suchanek@ds-wizard.org' }
+]
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'License :: OSI Approved :: Apache Software License',
+    'Programming Language :: Python',
+    'Topic :: Internet :: Proxy Servers',
+    'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
+]
+requires-python = '>=3.12, <4'
+dependencies = [
+    'click >=8.1.0, <9.0',
+    'fastapi >=0.120, <1.0',
+    'httpx >=0.28.0, <1.0',
+    'PyYAML >=6.0, <7.0',
+    'uvicorn >=0.38.0, <1.0',
+]
+
+[project.urls]
+Homepage = 'https://ds-wizard.org'
+Repository = 'https://github.com/ds-wizard/fairsharing-proxy'
+
+[project.scripts]
+dsw-fairsharing-proxy = 'fairsharing_proxy:main'
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ['src']
+
+[tool.distutils.bdist_wheel]
+universal = true

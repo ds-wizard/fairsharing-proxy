@@ -5,7 +5,7 @@ import uuid
 
 from typing import Any, Optional, Mapping
 
-from fairsharing_proxy.consts import URL_PREFIX, URL_PREFIX_LEN
+from .consts import URL_PREFIX, URL_PREFIX_LEN
 
 
 def _to_lower(text: Optional[str]) -> Optional[str]:

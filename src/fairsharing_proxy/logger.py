@@ -1,8 +1,8 @@
 import logging
 import sys
 
-from fairsharing_proxy.config import ProxyConfig
-from fairsharing_proxy.consts import LOGGER_NAME, \
+from .config import ProxyConfig
+from .consts import LOGGER_NAME, \
     DEFAULT_LOG_LEVEL, DEFAULT_LOG_FORMAT
 
 
