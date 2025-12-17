@@ -13,8 +13,10 @@ class MissingConfigurationError(Exception):
 
 class FAIRSharingConfig:
 
-    def __init__(self, api: str, timeout: float):
+    def __init__(self, api: str, graphql_api: str, graphql_key: str, timeout: float):
         self.api = api
+        self.graphql_api = graphql_api
+        self.graphql_key = graphql_key
         self.timeout = timeout
 
 
@@ -110,6 +112,8 @@ class ProxyConfigParser:
     def _fairsharing(self):
         return FAIRSharingConfig(
             api=self.get_or_default('fairsharing', 'api'),
+            graphql_api=self.get_or_default('fairsharing', 'graphql_api'),
+            graphql_key=self.get_or_default('fairsharing', 'graphql_key'),
             timeout=float(self.get_or_default('fairsharing', 'timeout')),
         )
 

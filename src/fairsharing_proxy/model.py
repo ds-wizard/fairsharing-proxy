@@ -345,3 +345,13 @@ class RecordSet:
             'results': [r.to_legacy_json() for r in self.records],
             'note': self.NOTE,
         }
+
+
+class GraphQLFastSearchQuery:
+
+    def __init__(self, q: str, registry: list[str] | None,
+                 record_type: list[str] | None, status: list[str] | None):
+        self.q = q
+        self.registry = registry
+        self.record_type = record_type
+        self.status = status

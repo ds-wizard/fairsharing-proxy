@@ -9,10 +9,11 @@ from .cache import RecordsCache
 from .config import ProxyConfig, cfg_parser
 from .consts import DEFAULT_CONFIG, ENV_CONFIG
 from .api_client import FAIRSharingClient, \
-    FAIRSharingUnauthorizedError
+    FAIRSharingUnauthorizedError, FAIRSharingGraphQLClient
 from .logger import LOG, init_config_logging
 from .model import Token, ProxyRequest, \
-    LegacySearchQuery, SearchQuery, RecordSet
+    LegacySearchQuery, SearchQuery, RecordSet, \
+    GraphQLFastSearchQuery
 
 
 class SearchRetryError(Exception):
@@ -75,6 +76,7 @@ class _ProxyCore:
         self.cfg = _load_config()  # type: ProxyConfig
         self.cache = RecordsCache(cfg=self.cfg)
         self.client = FAIRSharingClient(cfg=self.cfg)
+        self.graphql = FAIRSharingGraphQLClient(cfg=self.cfg)
         self.token_store = TokenStore()
 
     @staticmethod
@@ -203,6 +205,13 @@ class _ProxyCore:
         return fastapi.responses.JSONResponse(
             status_code=200,
             content=result_set.to_json(),
+        )
+
+    async def v2_search(self, query: GraphQLFastSearchQuery) -> fastapi.Response:
+        results = await self.graphql.search(query)
+        return fastapi.responses.JSONResponse(
+            status_code=200,
+            content=results,
         )
 
     async def startup(self):
