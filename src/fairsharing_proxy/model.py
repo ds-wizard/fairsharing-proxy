@@ -205,6 +205,20 @@ class Record:
         self.created_at = attrs.get('created_at', '')  # type: str
         self.updated_at = attrs.get('updated_at', '')  # type: str
 
+    def from_graphql_result(self, data: dict):
+        self.fairsharing_id = data.get('id', '')
+        self.record_type = data.get('type', '').lower()
+        self.registry = data.get('registry', '')
+        self.name = data.get('name', '')
+        self.homepage = data.get('homepage', None)
+        self.abbreviation = data.get('abbreviation', '')
+        self.doi = data.get('doi', None)
+        self.description = data.get('description', '')
+        if self.doi:
+            self.url = f'https://doi.org/{self.doi}'
+        else:
+            self.url = f'{URL_PREFIX}{self.fairsharing_id}'
+
     @staticmethod
     def optimize_text(text: str):
         parts = text.split(':', maxsplit=1)

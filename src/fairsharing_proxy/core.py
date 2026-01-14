@@ -13,7 +13,7 @@ from .api_client import FAIRSharingClient, \
 from .logger import LOG, init_config_logging
 from .model import Token, ProxyRequest, \
     LegacySearchQuery, SearchQuery, RecordSet, \
-    GraphQLFastSearchQuery
+    GraphQLFastSearchQuery, Record
 
 
 class SearchRetryError(Exception):
@@ -39,7 +39,7 @@ def _load_config() -> ProxyConfig:
 
 class TokenStore:
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._tokens = dict()  # type: dict[str, Token]
 
     def has_token(self, username: str) -> bool:
@@ -72,7 +72,7 @@ class _ProxyCore:
             cls._instance = super().__new__(cls)
             return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.cfg = _load_config()  # type: ProxyConfig
         self.cache = RecordsCache(cfg=self.cfg)
         self.client = FAIRSharingClient(cfg=self.cfg)
@@ -118,12 +118,22 @@ class _ProxyCore:
     async def _execute_search(
             self, query: SearchQuery, token: Token, retry=False,
     ) -> RecordSet:
-        # TODO: cache
         try:
-            results = await self.client.search(
-                query=query,
-                token=token,
+            graphql_query = GraphQLFastSearchQuery(
+                q=query.query,
+                registry=[query.registry] if query.registry else None,
+                record_type=[query.record_type] if query.record_type else None,
+                status=[query.status] if query.status else None,
             )
+            results = []
+            if len(query.query) > 1:
+                results = await self.graphql.search(graphql_query)
+            record_set = RecordSet([])
+            for result in results:
+                record = Record()
+                record.from_graphql_result(result)
+                record_set.records.append(record)
+            return record_set
         except FAIRSharingUnauthorizedError as e:
             self.token_store.clear_token(token.username)
             if retry:
@@ -147,9 +157,6 @@ class _ProxyCore:
                     f'Failed to execute FAIRSharing request: {str(e)}'
                 ),
             )
-        result_set = RecordSet(results)
-        result_set.rectify()
-        return result_set
 
     async def legacy_search(
             self, request: fastapi.Request,
@@ -180,7 +187,6 @@ class _ProxyCore:
     async def search(
             self, request: fastapi.Request, is_get: bool,
     ) -> fastapi.Response:
-        # TODO: cache
         rq = ProxyRequest(request=request)
         head_auth = rq.headers.get('Authorization', '')
         token = await self._get_token(rq, head_auth)
