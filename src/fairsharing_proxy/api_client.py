@@ -240,6 +240,7 @@ class FAIRSharingGraphQLClient:
             description
             registry
             status
+            urlPattern
           }}
         }}
         """)
